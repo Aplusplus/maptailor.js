@@ -1,48 +1,103 @@
 <html>
-	<body onload="onload()" style="margin:0;padding:0;">
-		<div id="map" style="width:100%;height:100%;">
-			loading
-		</div>
-		<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-		<script type="text/javascript" charset="utf-8">
+	<body style="margin:0;padding:0;">
+		<div id="map" style="width:100%;height:100%;"></div>
 		
+		<script src="http://maps.google.com/maps/api/js?sensor=false"></script>
+		<script>
+		
+		
+		//src http://mabp.kiev.ua/2010/08/16/custom-maptype-projection-in-google-map-api-v3/
+		// Эвклидова Проекция
+		var EuclideanProjection = function (){
+			// Ширина, она же высота одного кусочка картинки
+			var EUCLIDEAN_RANGE = 256; 
+			// Центр этой самой картинки
+			this.pixelOrigin = new google.maps.Point(EUCLIDEAN_RANGE / 2, EUCLIDEAN_RANGE / 2);
+			// Количество градусов в одном пикселе картинки
+			this.pixelsPerLonDegree = EUCLIDEAN_RANGE / 360;
+			// Количество радиан в одном пикселе картинки
+			this.pixelsPerLonRadian = EUCLIDEAN_RANGE / (2 * Math.PI);
+		};
+		
+		
+		// Эти два метода надо реализовать в классе проекции
+		// http://code.google.com/apis/maps/documentation/javascript/maptypes.html#Projections
+		EuclideanProjection.prototype = {
+			pixelOrigin : new google.maps.Point(0,0),
+			pixelsPerLonDegree : 0,
+			pixelsPerLonRadian : 0,
+		
+		
+			// код взят из 
+			// http://library.ucf.edu/Web/JS/Maps.js
+			// в работе можно глянуть тут
+			// http://library.ucf.edu/Administration/Maps/
+			// страна должна знать героев в лицо
+			fromLatLngToPoint : function(latLng, opt_point) {
+				var point = opt_point || new google.maps.Point(0, 0);
+				point.x = this.pixelOrigin.x + latLng.lng() * this.pixelsPerLonDegree;
+				point.y = this.pixelOrigin.y + (-1 * latLng.lat()) * this.pixelsPerLonDegree;
+				return point;
+			},
+		
+		
+			fromPointToLatLng : function(point) {
+				var lng = (point.x - this.pixelOrigin.x) / this.pixelsPerLonDegree,
+					lat = -1 * (point.y - this.pixelOrigin.y) / this.pixelsPerLonDegree;
+				return new google.maps.LatLng(lat , lng, true);
+			}
+		};
+
 		//create a new Image Map Type
 		myMapType = new google.maps.ImageMapType( {
-		  
+	  
 		  //if tiles have been created for a zoomable map -> use the no. of zoomlevels you specified
 		  //else -> use 0 to create a non zoomable map
+		  projection:new EuclideanProjection(),
 		  maxZoom:4, 
-		
+	
 		  //Function to return the tile based on the coordinates and the zoom
 		  getTileUrl: function(coord, zoom) { 
-			
+		
 			//omit 404 request
 			if(coord.x < 0 || coord.y < 0) return false
-			
+		
 			//build the url			
 			return  'tiles/'+zoom+'_'+coord.x+'_'+coord.y+'.png'
-			
+		
 		  },
 		  tileSize: new google.maps.Size(256, 256),
 		  name:'My Map Type'
-		
+	
 		})
 		
-		//define displayed map options
-		mapOptions = {
-			backgroundColor:'#FFFFFF',
-		    zoom: 3,
-		    center: new google.maps.LatLng(80,-40,false),
-			disableDefaultUI: true,
-			navigationControl:true
-		 }
+		
 		
 		//init map on body load
-		function onload() {	
-		  map = new google.maps.Map(document.getElementById("map"),mapOptions);
+		function initialize() {	
+		  map = new google.maps.Map(document.getElementById("map"),	{
+		  				backgroundColor:'#FFFFFF',
+		  			    zoom: 3,
+						disableDefaultUI: true,
+		  				navigationControl:true,
+		  			    center: new google.maps.LatLng(80,-40) // hier probiert man am einfachsten verschiedene werte aus bis man
+		  	       });
+		  
+			// 		  google.maps.event.addListener(map,'projection_changed',function(e){
+			// console.log('projection_changed');
+			// 	p = map.getProjection();
+			// 	console.log(p);
+			// 	c = p.fromPointToLatLng(new google.maps.Point(0,0));
+			// 	console.log(c);
+			// // 	map.panTo(c)
+			// 		  })
 		  map.mapTypes.set('mymaptype',myMapType);
 		  map.setMapTypeId('mymaptype');
+		
 		}
+		google.maps.event.addDomListener(window, 'load', initialize);
+		
 		</script>
+		
 	</body>
 </html>
