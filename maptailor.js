@@ -350,3 +350,6 @@ revertToSnapshot(InitialSnapshotID);
 
 // Restore application preferences
 app.preferences.rulerUnits = startRulerUnits; 
+
+// Done!
+alert('Tiles have been cut and saved here '+FolderPath)
